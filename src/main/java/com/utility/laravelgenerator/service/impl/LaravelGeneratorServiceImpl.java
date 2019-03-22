@@ -128,7 +128,7 @@ public class LaravelGeneratorServiceImpl {
         StringBuffer fillwhere = new StringBuffer();
         for(int i = 0; i < colCount; i++) {
             String c = colNames.get(i);
-            String field = "when(isset($data['" + c + "']), function ($query) use ($data) { return $query->where('" + c + "',$data['" + c + "']);})->";
+            String field = "when(isset($data['" + c + "']), function ($query) use ($data) { return $query->where('" + c + "', '=', $data['" + c + "']);})->";
             if(i < colCount - 1) {
                 field += "\n        ";
             }
