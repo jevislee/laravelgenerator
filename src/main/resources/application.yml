@@ -1,0 +1,15 @@
+spring:
+  profiles:
+    active: dev
+
+---
+spring:
+  profiles: dev
+  datasource:
+    driverClassName: com.mysql.jdbc.Driver
+    url: jdbc:mysql://ip:3306/db?useUnicode=true&characterEncoding=UTF-8&useSSL=true
+    username: root
+    password: xxx
+    testWhileIdle: true
+    testOnBorrow: true
+    validationQuery: SELECT 1
