@@ -8,14 +8,16 @@ use App\Models\XXX;
 
 class XXXController extends Controller
 {
+    private $rules = [
+       @@@fillrule
+    ];
+
     public function add(Request $request)
     {
         //json_decode()第二个参数为TRUE时将返回数组，FALSE时返回对象
         $data = json_decode($request->getContent(), true);
 
-        $validator = Validator::make($data, [
-           @@@fillrule
-        ]);
+        $validator = Validator::make($data, $this->rules);
 
         if ($validator->fails()) {
             return $this->validateError($validator->errors());
@@ -35,9 +37,7 @@ class XXXController extends Controller
     {
         $data = json_decode($request->getContent(), true);
 
-        $validator = Validator::make($data, [
-           @@@fillrule
-        ]);
+        $validator = Validator::make($data, $this->rules);
 
         if ($validator->fails()) {
             return $this->validateError($validator->errors());
@@ -72,9 +72,7 @@ class XXXController extends Controller
     {
         $data = $request->only(['page_size',@@@fillable]);
 
-        $validator = Validator::make($data, [
-           @@@fillrule
-        ]);
+        $validator = Validator::make($data, $this->rules);
 
         if ($validator->fails()) {
             return $this->validateError($validator->errors());

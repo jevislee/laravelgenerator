@@ -171,7 +171,7 @@ public class LaravelGeneratorServiceImpl {
             }
 
             if(i < colCount - 1) {
-                buf.append(",\n           ");
+                buf.append(",\n       ");
             }
         }
         content = content.replaceAll("@@@fillrule", Matcher.quoteReplacement(buf.toString()));
