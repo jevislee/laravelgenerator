@@ -92,6 +92,7 @@ public class LaravelGeneratorServiceImpl {
 
             contrlContent = process(contrlContent, entityName, tableName, colNames);
             contrlContent = processContrl(contrlContent, colNames);
+            contrlContent = processRequest(contrlContent, colNames, colJavaTypes, colLengths);
             String contrlPath = createPathIfNonexist(appDir + "Http/Controllers", entityName + "Controller.php");
             writeFile(contrlPath, contrlContent);
 
@@ -108,16 +109,15 @@ public class LaravelGeneratorServiceImpl {
         content = content.replaceAll("XXX", entityName);
         content = content.replaceAll("@@@table", tableName);
 
-        StringBuffer fillable = new StringBuffer();
+        StringBuffer buf = new StringBuffer();
         int colCount = colNames.size();
         for(int i = 0; i < colCount; i++) {
-            String field = "'" +  colNames.get(i) + "'";
+            buf.append("'" +  colNames.get(i) + "'");
             if(i < colCount - 1) {
-                field += ",";
+                buf.append(",");
             }
-            fillable.append(field);
         }
-        content = content.replaceAll("@@@fillable", fillable.toString());
+        content = content.replaceAll("@@@fillable", buf.toString());
 
         return content;
     }
@@ -125,16 +125,15 @@ public class LaravelGeneratorServiceImpl {
     private String processContrl(String content, List<String> colNames) {
         int colCount = colNames.size();
 
-        StringBuffer fillwhere = new StringBuffer();
+        StringBuffer buf = new StringBuffer();
         for(int i = 0; i < colCount; i++) {
             String c = colNames.get(i);
-            String field = "when(isset($data['" + c + "']), function ($query) use ($data) { return $query->where('" + c + "', '=', $data['" + c + "']);})->";
+            buf.append("when(isset($data['" + c + "']), function ($query) use ($data) { return $query->where('" + c + "', '=', $data['" + c + "']);})->");
             if(i < colCount - 1) {
-                field += "\n        ";
+                buf.append("\n        ");
             }
-            fillwhere.append(field);
         }
-        content = content.replaceAll("@@@fillwhere", Matcher.quoteReplacement(fillwhere.toString()));
+        content = content.replaceAll("@@@fillwhere", Matcher.quoteReplacement(buf.toString()));
 
         return content;
     }
@@ -151,7 +150,35 @@ public class LaravelGeneratorServiceImpl {
 
         return content;
     }
-    
+
+    private String processRequest(String content, List<String> colNames, List<String> colJavaTypes, List<String> colLengths) {
+        int colCount = colNames.size();
+
+        StringBuffer buf = new StringBuffer();
+        for(int i = 0; i < colCount; i++) {
+            String c = colNames.get(i);
+            String t = colJavaTypes.get(i);
+            String l = colLengths.get(i);
+
+            if(t.endsWith("String")) {
+                buf.append("'" + c + "' => 'nullable|string|max:" + l + "'");
+            } else if(t.endsWith("Integer") || t.endsWith("Byte") || t.endsWith("Long")) {
+                buf.append("'" + c + "' => 'nullable|integer'");
+            } else if(t.endsWith("Float") || t.endsWith("Double")){
+                buf.append("'" + c + "' => 'nullable|numeric'");
+            } else {
+                buf.append("'" + c + "' => 'nullable'");
+            }
+
+            if(i < colCount - 1) {
+                buf.append(",\n           ");
+            }
+        }
+        content = content.replaceAll("@@@fillrule", Matcher.quoteReplacement(buf.toString()));
+
+        return content;
+    }
+
     private String readFile(String templateFile) {
         Resource res = new ClassPathResource(templateFile);
         StringBuffer content = new StringBuffer();

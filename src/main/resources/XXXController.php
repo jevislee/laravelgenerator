@@ -1,6 +1,7 @@
 <?php
 namespace App\Http\Controllers;
 
+use Validator;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Models\XXX;
@@ -11,6 +12,14 @@ class XXXController extends Controller
     {
         //json_decode()第二个参数为TRUE时将返回数组，FALSE时返回对象
         $data = json_decode($request->getContent(), true);
+
+        $validator = Validator::make($data, [
+           @@@fillrule
+        ]);
+
+        if ($validator->fails()) {
+            return $this->validateError($validator->errors());
+        }
 
         $vo = new XXX($data);
         if ($vo->save()) {
@@ -25,6 +34,14 @@ class XXXController extends Controller
     public function update(Request $request, $id)
     {
         $data = json_decode($request->getContent(), true);
+
+        $validator = Validator::make($data, [
+           @@@fillrule
+        ]);
+
+        if ($validator->fails()) {
+            return $this->validateError($validator->errors());
+        }
 
         $vo = XXX::where('id', '=', $id)->update($data);
         if($vo > 0) {
@@ -54,6 +71,14 @@ class XXXController extends Controller
     public function queryList(Request $request)
     {
         $data = $request->only(['page_size',@@@fillable]);
+
+        $validator = Validator::make($data, [
+           @@@fillrule
+        ]);
+
+        if ($validator->fails()) {
+            return $this->validateError($validator->errors());
+        }
 
         $vo = XXX::
         @@@fillwhere
