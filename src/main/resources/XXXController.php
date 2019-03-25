@@ -1,9 +1,11 @@
 <?php
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Backend;
 
 use Validator;
+use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use App\Http\Controllers\Controller;
 use App\Models\XXX;
 
 class XXXController extends Controller
@@ -48,6 +50,26 @@ class XXXController extends Controller
             return $this->success();
         } else {
             return $this->error();
+        }
+    }
+
+    public function batchUpdate(Request $request)
+    {
+        $data = json_decode($request->getContent(), true);
+
+        $ids = $data['ids'];
+        $size = count($ids);
+
+        DB::beginTransaction();
+        try{
+            for($i = 0; $i < $size; $i++){
+                AdminUser::where('id', '=', $ids[$i])->update(['字段' => $data['字段']]);
+            }
+            DB::commit();
+            return $this->success();
+        } catch (Exception $e) {
+            DB::rollBack();
+            return $this->errorWithInfo($e->getMessage());
         }
     }
 
