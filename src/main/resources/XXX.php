@@ -14,8 +14,9 @@ class XXX extends Model {
 
     //默认情况下, Eloquent 会假定你的表中存在 created_at 和 updated_at 字段. 如果你不想让 Eloquent 自动管理这俩个列, 可以在你的模型中将 $timestamps 属性设置为 false
     public $timestamps = true;
-    
+
     //解注释后删除操作使用软删除
+    //deleted_at只要不为null就无法查询出来
     use SoftDeletes;
     protected $dates = ['deleted_at'];
 }
