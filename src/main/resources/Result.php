@@ -43,13 +43,13 @@ trait Result
         ], $code);
     }
 
-    public function errorWithInfo($message)
-    {
-        return $this->errorWithCodeAndMessage(503, $message);
-    }
-
     public function validateError($message)
     {
-        return $this->errorWithCodeAndMessage(422, $message);
+        return $this->errorWithCodeAndInfo(422, $message);
+    }
+
+    public function errorWithInfo($message)
+    {
+        return $this->errorWithCodeAndInfo(503, $message);
     }
 }
