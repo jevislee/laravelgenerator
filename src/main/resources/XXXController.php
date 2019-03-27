@@ -31,7 +31,7 @@ class XXXController extends Controller
             $ret->id = $vo->id;
             return $this->successWithData($ret);
         } else {
-            return $this->error();
+            return $this->errorWithInfo('XXX save error');
         }
     }
 
@@ -49,7 +49,7 @@ class XXXController extends Controller
         if($vo > 0) {
             return $this->success();
         } else {
-            return $this->error();
+            return $this->errorWithInfo('XXX update error');
         }
     }
 
@@ -79,7 +79,7 @@ class XXXController extends Controller
         if($vo > 0) {
             return $this->success();
         } else {
-            return $this->error();
+            return $this->errorWithInfo('XXX delete error');
         }
     }
 
@@ -101,8 +101,10 @@ class XXXController extends Controller
         }
 
         $vo = XXX::
+        select(['id',@@@fillable,'created_at', 'updated_at'])->
         @@@fillwhere
+        orderBy('id', 'desc')->
         paginate(isset($data['page_size']) && is_numeric($data['page_size']) && intval($data['page_size']) > 0 && intval($data['page_size']) < 100 ? $data['page_size'] : 10);
-        return $this->successWithData($vo);
+        return $this->successWithPage($vo);
     }
 }
