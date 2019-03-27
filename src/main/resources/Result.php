@@ -27,7 +27,7 @@ trait Result
             'total'=>$vo->total(),
             'page_size'=>$vo->perPage(),
             'page'=>$vo->currentPage(),
-            'last_page'=>$vo->lastPage(),
+            'page_count'=>$vo->lastPage(),
             'items'=>$vo->toArray()['data']
         ]);
 
