@@ -100,6 +100,7 @@ class XXXController extends Controller
             return $this->validateError($validator->errors());
         }
 
+        //select的字段可以通过as重命名来对应接口文档里的字段名,paginate返回的对象可以取出数据重新组织来对应接口文档里的字段名
         $vo = XXX::
         select(['id',@@@fillable,'created_at', 'updated_at'])->
         @@@fillwhere
