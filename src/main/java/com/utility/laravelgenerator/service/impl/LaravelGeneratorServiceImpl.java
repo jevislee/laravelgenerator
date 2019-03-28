@@ -46,6 +46,11 @@ public class LaravelGeneratorServiceImpl {
         String[] array = tableNames.split(",");
         StringBuffer routesContent = new StringBuffer();
 
+        //模版文件必须直接放在resources目录下,不能放子目录,否则无法找到
+        String modelContent = readFile("XXX.php");
+        String contrlContent = readFile("XXXController.php");
+        String routeContent = readFile("XXXRoute.php");
+
         for(String tableName : array) {
             String entityName = CamelCaseUtil.camelCaseName(tableName, true);
 
@@ -79,11 +84,6 @@ public class LaravelGeneratorServiceImpl {
                     hasDeletedAt = true;
                 }
             }
-
-            //模版文件必须直接放在resources目录下,不能放子目录,否则无法找到
-            String modelContent = readFile("XXX.php");
-            String contrlContent = readFile("XXXController.php");
-            String routeContent = readFile("XXXRoute.php");
 
             modelContent = process(modelContent, entityName, tableName, colNames);
             modelContent = processModel(modelContent, hasCreatedAt, hasUpdatedAt, hasDeletedAt);
@@ -197,7 +197,9 @@ public class LaravelGeneratorServiceImpl {
             String line;
             //分行读取  
             while ((line = buffreader.readLine()) != null) {
-                content.append(line + "\n");
+                if(!line.trim().startsWith("//")) {
+                    content.append(line + "\n");
+                }
             }
             
             return content.toString();
