@@ -91,7 +91,7 @@ public class LaravelGeneratorServiceImpl {
             writeFile(modelPath, modelContent);
 
             contrlContent = process(contrlContent, entityName, tableName, colNames);
-            contrlContent = processContrl(contrlContent, colNames);
+            contrlContent = processContrl(contrlContent, colNames, colJavaTypes, colLengths);
             contrlContent = processRequest(contrlContent, colNames, colJavaTypes, colLengths);
             String contrlPath = createPathIfNonexist(appDir + "Http/Controllers", entityName + "Controller.php");
             writeFile(contrlPath, contrlContent);
@@ -122,13 +122,21 @@ public class LaravelGeneratorServiceImpl {
         return content;
     }
 
-    private String processContrl(String content, List<String> colNames) {
+    private String processContrl(String content, List<String> colNames, List<String> colJavaTypes, List<String> colLengths) {
         int colCount = colNames.size();
 
         StringBuffer buf = new StringBuffer();
         for(int i = 0; i < colCount; i++) {
             String c = colNames.get(i);
-            buf.append("when(isset($data['" + c + "']), function ($query) use ($data) { return $query->where('" + c + "', '=', $data['" + c + "']);})->");
+            String t = colJavaTypes.get(i);
+            String l = colLengths.get(i);
+
+            if(t.endsWith("String") && Integer.parseInt(l) > 20) {
+                buf.append("when(isset($data['" + c + "']), function ($query) use ($data) { return $query->where('" + c + "', 'like', '%'.$data['" + c + "'].'%');})->");
+            } else {
+                buf.append("when(isset($data['" + c + "']), function ($query) use ($data) { return $query->where('" + c + "', '=', $data['" + c + "']);})->");
+            }
+
             if(i < colCount - 1) {
                 buf.append("\n        ");
             }

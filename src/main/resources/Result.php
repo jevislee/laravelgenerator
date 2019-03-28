@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Utils;
 
 trait Result
 {
@@ -23,13 +23,13 @@ trait Result
 
     public function successWithPage($vo)
     {
-        $data = array([
+        $data = array(
             'total'=>$vo->total(),
             'page_size'=>$vo->perPage(),
             'page'=>$vo->currentPage(),
             'page_count'=>$vo->lastPage(),
             'items'=>$vo->toArray()['data']
-        ]);
+        );
 
         return $this->successWithData($data);
     }
