@@ -47,11 +47,15 @@ public class LaravelGeneratorServiceImpl {
         StringBuffer routesContent = new StringBuffer();
 
         //模版文件必须直接放在resources目录下,不能放子目录,否则无法找到
-        String modelContent = readFile("XXX.php");
-        String contrlContent = readFile("XXXController.php");
-        String routeContent = readFile("XXXRoute.php");
+        String modelTempalte = readFile("XXX.php");
+        String contrlTemplate = readFile("XXXController.php");
+        String routeTemplate = readFile("XXXRoute.php");
 
         for(String tableName : array) {
+            String modelContent = modelTempalte;
+            String contrlContent = contrlTemplate;
+            String routeContent = routeTemplate;
+
             String entityName = CamelCaseUtil.camelCaseName(tableName, true);
 
             //Arrays.asList创建的List不可改变,要通过new ArrayList<>()把所有元素都复制到新的ArrayList对象中操作
