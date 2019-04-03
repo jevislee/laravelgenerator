@@ -8,7 +8,7 @@ trait Result
     {
         return response()->json([
             'status' => 'success',
-            'status_code' => 200
+            'status_code' => 1000
         ], 200);
     }
 
@@ -16,7 +16,7 @@ trait Result
     {
         return response()->json([
             'status' => 'success',
-            'status_code' => 200,
+            'status_code' => 1000,
             'data' => $data
         ], 200);
     }
@@ -40,16 +40,16 @@ trait Result
             'status' => 'error',
             'status_code' => $code,
             'message' => $message
-        ], $code);
+        ], 200);
     }
 
     public function validateError($message)
     {
-        return $this->errorWithCodeAndInfo(422, $message);
+        return $this->errorWithCodeAndInfo(1001, $message);
     }
 
     public function errorWithInfo($message)
     {
-        return $this->errorWithCodeAndInfo(503, $message);
+        return $this->errorWithCodeAndInfo(1002, $message);
     }
 }
