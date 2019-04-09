@@ -27,6 +27,7 @@ class XXXController extends Controller
             return $this->validateError($validator->errors());
         }
 
+        //new XXX($data)可以把$data中不在Model的$fillable里的字段过滤掉,前端传不存在的字段也不会数据库报错
         $vo = new XXX($data);
         if ($vo->save()) {
             $ret = new XXX;
@@ -47,6 +48,7 @@ class XXXController extends Controller
             return $this->validateError($validator->errors());
         }
 
+        //update($data)不会过滤字段,前端传不存在的字段会数据库报错,可以用isset($data['x']),$x = $data['x'],unset($data['x'])解决
         $vo = XXX::where('id', '=', $id)->update($data);
         if($vo > 0) {
             return $this->success();
