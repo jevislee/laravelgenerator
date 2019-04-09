@@ -290,6 +290,17 @@ public class LaravelGeneratorServiceImpl {
                 if(colType.equalsIgnoreCase("datetime")) {
                     checkResult.append("表" + tableName + "的字段" + colName + "的类型为datetime;\n");
                 }
+
+                List<String> possibleDateFieldNames = Arrays.asList(
+                        "created_at", "updated_at", "deleted_at",
+                        "create_at", "update_at", "delete_at",
+                        "created_time", "updated_time", "deleted_time",
+                        "create_time", "update_time", "delete_time");
+                if(possibleDateFieldNames.contains(colName.toLowerCase())) {
+                    if(!colType.equalsIgnoreCase("timestamp")) {
+                        checkResult.append("表" + tableName + "的字段" + colName + "的类型不为timestamp;\n");
+                    }
+                }
             }
         }
         return checkResult.toString();
