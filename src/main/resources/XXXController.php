@@ -16,6 +16,7 @@ class XXXController extends Controller
        @@@fillrule
     ];
 
+    //$request存url参数和body
     public function add(Request $request)
     {
         //json_decode()第二个参数为TRUE时将返回数组，FALSE时返回对象
@@ -38,6 +39,7 @@ class XXXController extends Controller
         }
     }
 
+    //$request存url参数和body,$id是路径参数
     public function update(Request $request, $id)
     {
         $data = json_decode($request->getContent(), true);
@@ -57,6 +59,7 @@ class XXXController extends Controller
         }
     }
 
+    //$request存url参数和body
     public function batchUpdate(Request $request)
     {
         $data = json_decode($request->getContent(), true);
@@ -77,6 +80,7 @@ class XXXController extends Controller
         }
     }
 
+    //$request存url参数和body,$id是路径参数
     public function delete(Request $request, $id)
     {
         $vo = XXX::destroy($id);
@@ -87,6 +91,7 @@ class XXXController extends Controller
         }
     }
 
+    //$request存url参数和body,$id是路径参数
     public function queryById(Request $request, $id)
     {
         //同$vo = XXX::where('id', '=', $id)->get();
@@ -94,6 +99,7 @@ class XXXController extends Controller
         return $this->successWithData($vo);
     }
 
+    //$request存url参数和body
     //page参数指定当前页,laravel可以自动获取json里和url参数里的page字段值
     public function queryList(Request $request)
     {
