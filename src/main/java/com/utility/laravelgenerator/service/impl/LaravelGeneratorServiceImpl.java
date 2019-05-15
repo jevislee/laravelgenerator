@@ -173,7 +173,11 @@ public class LaravelGeneratorServiceImpl {
             String l = colLengths.get(i);
 
             if(t.endsWith("String")) {
-                buf.append("'" + c + "' => 'nullable|string|max:" + l + "'");
+                if(l.equals("16383")) {//text类型字段的长度为16383(实际是varchar类型字段的最大长度)
+                    buf.append("'" + c + "' => 'nullable|string");
+                } else {
+                    buf.append("'" + c + "' => 'nullable|string|max:" + l + "'");
+                }
             } else if(t.endsWith("Integer") || t.endsWith("Byte") || t.endsWith("Long")) {
                 buf.append("'" + c + "' => 'nullable|integer'");
             } else if(t.endsWith("Float") || t.endsWith("Double")){
