@@ -1,0 +1,6 @@
+新增记录 post   /v1/@@@table
+更新记录 put    /v1/@@@table/{id}
+批量更新 put    /v1/@@@tables
+删除记录 delete /v1/@@@table/{id}
+查看详情 get    /v1/@@@table/{id}
+分页查询 get    /v1/@@@table?page=1&page_size=10

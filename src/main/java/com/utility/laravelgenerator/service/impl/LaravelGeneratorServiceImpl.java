@@ -1,6 +1,7 @@
 package com.utility.laravelgenerator.service.impl;
 
 import com.utility.laravelgenerator.util.CamelCaseUtil;
+import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -47,16 +48,19 @@ public class LaravelGeneratorServiceImpl {
     public void generate(String tableNames) {
         String[] array = tableNames.trim().split(",");
         StringBuffer routesContent = new StringBuffer();
+        StringBuffer restTestsContent = new StringBuffer();
 
         //模版文件必须直接放在resources目录下,不能放子目录,否则无法找到
         String modelTempalte = readFile("XXX.php");
         String contrlTemplate = readFile("XXXController.php");
         String routeTemplate = readFile("XXXRoute.php");
+        String restTestTemplate = readFile("RestTest.txt");
 
         for(String tableName : array) {
             String modelContent = modelTempalte;
             String contrlContent = contrlTemplate;
             String routeContent = routeTemplate;
+            String restTestContent = restTestTemplate;
 
             String entityName = CamelCaseUtil.camelCaseName(tableName, true);
 
@@ -71,35 +75,43 @@ public class LaravelGeneratorServiceImpl {
             List<String> colDbTypes = new ArrayList<>();
             List<String> colJavaTypes = new ArrayList<>();
             List<String> colLengths = new ArrayList<>();
+            StringBuffer json = new StringBuffer("{\n");
 
             SqlRowSet rowSet = template.queryForRowSet("select * from " + tableName);
             SqlRowSetMetaData metaData = rowSet.getMetaData();
             int columnCount = metaData.getColumnCount();
 
             for (int i = 1; i <= columnCount; i++) {
-                if (!ignoreColNames.contains(metaData.getColumnName(i))) {
-                    colNames.add(metaData.getColumnName(i));
+                String colName = metaData.getColumnName(i);
+                if (!ignoreColNames.contains(colName)) {
+                    colNames.add(colName);
                     colDbTypes.add(metaData.getColumnTypeName(i));
                     colJavaTypes.add(metaData.getColumnClassName(i));
                     colLengths.add(String.valueOf(metaData.getPrecision(i)));
-                } else if (metaData.getColumnName(i).equals("created_at")) {
+                    json.append("\"" + colName + "\"" + ": " + "\"\",\n");
+                } else if (colName.equals("created_at")) {
                     hasCreatedAt = true;
-                } else if (metaData.getColumnName(i).equals("updated_at")) {
+                } else if (colName.equals("updated_at")) {
                     hasUpdatedAt = true;
-                } else if (metaData.getColumnName(i).equals("deleted_at")) {
+                } else if (colName.equals("deleted_at")) {
                     hasDeletedAt = true;
                 }
             }
+            
+            if(json.toString().endsWith(",\n")) {
+                json.delete(json.length() - 2, json.length() - 1);
+            }
+            json.append("}");
 
-            StringBuffer comments = new StringBuffer("/*\r\n");
+            StringBuffer comments = new StringBuffer("/*\n");
             try {
                 DatabaseMetaData dbMetaData = template.getDataSource().getConnection().getMetaData();
                 ResultSet resultSet = dbMetaData.getColumns(null, null, tableName, null);
                 while (resultSet.next()) {
                     String name = resultSet.getString("COLUMN_NAME");
                     String comment = resultSet.getString("REMARKS");
-                    if (!ignoreColNames.contains(name)) {
-                        comments.append(" * " + name + ": " + comment + "\r\n");
+                    if (!ignoreColNames.contains(name) && StringUtils.isNotBlank(comment)) {
+                        comments.append(" * " + name + ": " + comment + "\n");
                     }
                 }
             } catch (Exception e) {
@@ -121,10 +133,18 @@ public class LaravelGeneratorServiceImpl {
             routeContent = routeContent.replaceAll("@@@table", tableName.toLowerCase());
             routeContent = routeContent.replaceAll("XXX", entityName);
             routesContent.append(routeContent + "\n");
+
+            restTestContent = restTestContent.replaceAll("@@@table", tableName.toLowerCase());
+            restTestContent = restTestContent.replaceAll("XXX", entityName);
+            restTestsContent.append(restTestContent);
+            restTestsContent.append(json + "\n\n");
         }
 
         String routePath = createPathIfNonexist(appDir, "Route.php");
         writeFile(routePath, routesContent.toString());
+
+        String restTestPath = createPathIfNonexist(appDir, "RestTest.txt");
+        writeFile(restTestPath, restTestsContent.toString());
     }
 
     private String process(String content, String entityName, String tableName, List<String> colNames) {
