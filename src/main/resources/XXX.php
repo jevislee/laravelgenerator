@@ -2,6 +2,7 @@
 namespace App\Models;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
+@@@comments
 class XXX extends Model {
     //与模型关联的数据表
     protected $table = '@@@table';

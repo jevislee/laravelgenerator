@@ -12,6 +12,8 @@ import org.springframework.jdbc.support.rowset.SqlRowSetMetaData;
 import org.springframework.stereotype.Service;
 
 import java.io.*;
+import java.sql.DatabaseMetaData;
+import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -43,7 +45,7 @@ public class LaravelGeneratorServiceImpl {
             "VARCHARACTER,VARYING,WHEN,WHERE,WHILE,WITH,WRITE,X509,XOR,YEAR_MONTH,ZEROFILL";
 
     public void generate(String tableNames) {
-        String[] array = tableNames.split(",");
+        String[] array = tableNames.trim().split(",");
         StringBuffer routesContent = new StringBuffer();
 
         //模版文件必须直接放在resources目录下,不能放子目录,否则无法找到
@@ -89,8 +91,24 @@ public class LaravelGeneratorServiceImpl {
                 }
             }
 
+            StringBuffer comments = new StringBuffer("/*\r\n");
+            try {
+                DatabaseMetaData dbMetaData = template.getDataSource().getConnection().getMetaData();
+                ResultSet resultSet = dbMetaData.getColumns(null, null, tableName, null);
+                while (resultSet.next()) {
+                    String name = resultSet.getString("COLUMN_NAME");
+                    String comment = resultSet.getString("REMARKS");
+                    if (!ignoreColNames.contains(name)) {
+                        comments.append(" * " + name + ": " + comment + "\r\n");
+                    }
+                }
+            } catch (Exception e) {
+                logger.error("error", e);
+            }
+            comments.append(" */");
+
             modelContent = process(modelContent, entityName, tableName, colNames);
-            modelContent = processModel(modelContent, hasCreatedAt, hasUpdatedAt, hasDeletedAt);
+            modelContent = processModel(modelContent, comments.toString(), hasCreatedAt, hasUpdatedAt, hasDeletedAt);
             String modelPath = createPathIfNonexist(appDir + "Models", entityName + ".php");
             writeFile(modelPath, modelContent);
 
@@ -150,7 +168,7 @@ public class LaravelGeneratorServiceImpl {
         return content;
     }
 
-    private String processModel(String content, boolean hasCreatedAt, boolean hasUpdatedAt, boolean hasDeletedAt) {
+    private String processModel(String content, String comments, boolean hasCreatedAt, boolean hasUpdatedAt, boolean hasDeletedAt) {
         if(!hasCreatedAt || !hasUpdatedAt) {
             content = content.replaceAll(Matcher.quoteReplacement("public $timestamps"), Matcher.quoteReplacement("//public $timestamps"));
         }
@@ -160,6 +178,7 @@ public class LaravelGeneratorServiceImpl {
             content = content.replaceAll(Matcher.quoteReplacement("protected $dates"), Matcher.quoteReplacement("//protected $dates"));
         }
 
+        content = content.replaceAll("@@@comments", comments);
         return content;
     }
 
