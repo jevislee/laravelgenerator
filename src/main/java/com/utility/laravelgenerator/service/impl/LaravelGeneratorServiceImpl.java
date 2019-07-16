@@ -88,7 +88,7 @@ public class LaravelGeneratorServiceImpl {
                     colDbTypes.add(metaData.getColumnTypeName(i));
                     colJavaTypes.add(metaData.getColumnClassName(i));
                     colLengths.add(String.valueOf(metaData.getPrecision(i)));
-                    json.append("\"" + colName + "\"" + ": " + "\"\",\n");
+                    json.append("  \"" + colName + "\"" + ": " + "\"\",\n");
                 } else if (colName.equals("created_at")) {
                     hasCreatedAt = true;
                 } else if (colName.equals("updated_at")) {
