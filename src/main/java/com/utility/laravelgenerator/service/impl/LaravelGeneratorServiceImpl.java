@@ -213,7 +213,7 @@ public class LaravelGeneratorServiceImpl {
 
             if(t.endsWith("String")) {
                 if(l.equals("16383")) {//text类型字段的长度为16383(实际是varchar类型字段的最大长度)
-                    buf.append("'" + c + "' => 'nullable|string");
+                    buf.append("'" + c + "' => 'nullable|string'");
                 } else {
                     buf.append("'" + c + "' => 'nullable|string|max:" + l + "'");
                 }
