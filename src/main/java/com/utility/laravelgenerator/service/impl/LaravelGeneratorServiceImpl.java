@@ -15,10 +15,7 @@ import org.springframework.stereotype.Service;
 import java.io.*;
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.regex.Matcher;
 
 @Service
@@ -79,6 +76,28 @@ public class LaravelGeneratorServiceImpl {
             StringBuffer json = new StringBuffer("{\n");
             StringBuffer markdown = new StringBuffer();
 
+            Map<String, String> commentMap = new HashMap();
+            StringBuffer comments = new StringBuffer("/*\n");
+            try {
+                DatabaseMetaData dbMetaData = template.getDataSource().getConnection().getMetaData();
+                ResultSet resultSet = dbMetaData.getColumns(null, null, tableName, null);
+                while (resultSet.next()) {
+                    String name = resultSet.getString("COLUMN_NAME");
+                    String comment = resultSet.getString("REMARKS");
+                    if (!ignoreColNames.contains(name)) {
+                        if(StringUtils.isNotBlank(comment)) {
+                            comments.append(" * " + name + ": " + comment + "\n");
+                            commentMap.put(name, comment);
+                        } else {
+                            commentMap.put(name, "");
+                        }
+                    }
+                }
+            } catch (Exception e) {
+                logger.error("error", e);
+            }
+            comments.append(" */");
+            
             SqlRowSet rowSet = template.queryForRowSet("select * from " + tableName);
             SqlRowSetMetaData metaData = rowSet.getMetaData();
             int columnCount = metaData.getColumnCount();
@@ -95,7 +114,7 @@ public class LaravelGeneratorServiceImpl {
                     colJavaTypes.add(javaType);
                     
                     json.append("  \"" + colName + "\"" + ": " + "\"\",\n");
-                    markdown.append("|" + colName + "|" + javaType + "||\n");
+                    markdown.append("|" + colName + "|" + javaType + "|" + commentMap.get(colName) + "|\n");
                 } else if (colName.equals("created_at")) {
                     hasCreatedAt = true;
                 } else if (colName.equals("updated_at")) {
@@ -109,22 +128,6 @@ public class LaravelGeneratorServiceImpl {
                 json.delete(json.length() - 2, json.length() - 1);
             }
             json.append("}");
-
-            StringBuffer comments = new StringBuffer("/*\n");
-            try {
-                DatabaseMetaData dbMetaData = template.getDataSource().getConnection().getMetaData();
-                ResultSet resultSet = dbMetaData.getColumns(null, null, tableName, null);
-                while (resultSet.next()) {
-                    String name = resultSet.getString("COLUMN_NAME");
-                    String comment = resultSet.getString("REMARKS");
-                    if (!ignoreColNames.contains(name) && StringUtils.isNotBlank(comment)) {
-                        comments.append(" * " + name + ": " + comment + "\n");
-                    }
-                }
-            } catch (Exception e) {
-                logger.error("error", e);
-            }
-            comments.append(" */");
 
             modelContent = process(modelContent, entityName, tableName, colNames);
             modelContent = processModel(modelContent, comments.toString(), hasCreatedAt, hasUpdatedAt, hasDeletedAt);
