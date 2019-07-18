@@ -49,6 +49,7 @@ public class LaravelGeneratorServiceImpl {
         String[] array = tableNames.trim().split(",");
         StringBuffer routesContent = new StringBuffer();
         StringBuffer restTestsContent = new StringBuffer();
+        StringBuffer markdownContent = new StringBuffer();
 
         //模版文件必须直接放在resources目录下,不能放子目录,否则无法找到
         String modelTempalte = readFile("XXX.php");
@@ -76,6 +77,7 @@ public class LaravelGeneratorServiceImpl {
             List<String> colJavaTypes = new ArrayList<>();
             List<String> colLengths = new ArrayList<>();
             StringBuffer json = new StringBuffer("{\n");
+            StringBuffer markdown = new StringBuffer();
 
             SqlRowSet rowSet = template.queryForRowSet("select * from " + tableName);
             SqlRowSetMetaData metaData = rowSet.getMetaData();
@@ -86,9 +88,14 @@ public class LaravelGeneratorServiceImpl {
                 if (!ignoreColNames.contains(colName)) {
                     colNames.add(colName);
                     colDbTypes.add(metaData.getColumnTypeName(i));
-                    colJavaTypes.add(metaData.getColumnClassName(i));
                     colLengths.add(String.valueOf(metaData.getPrecision(i)));
+
+                    String javaType = metaData.getColumnClassName(i);
+                    javaType = javaType.substring(javaType.lastIndexOf(".") + 1);
+                    colJavaTypes.add(javaType);
+                    
                     json.append("  \"" + colName + "\"" + ": " + "\"\",\n");
+                    markdown.append("|" + colName + "|" + javaType + "||\n");
                 } else if (colName.equals("created_at")) {
                     hasCreatedAt = true;
                 } else if (colName.equals("updated_at")) {
@@ -138,6 +145,9 @@ public class LaravelGeneratorServiceImpl {
             restTestContent = restTestContent.replaceAll("XXX", entityName);
             restTestsContent.append(restTestContent);
             restTestsContent.append(json + "\n\n");
+
+            markdownContent.append(tableName.toLowerCase() + "\n");
+            markdownContent.append(markdown + "\n");
         }
 
         String routePath = createPathIfNonexist(appDir, "Route.php");
@@ -145,6 +155,9 @@ public class LaravelGeneratorServiceImpl {
 
         String restTestPath = createPathIfNonexist(appDir, "RestTest.txt");
         writeFile(restTestPath, restTestsContent.toString());
+
+        String markdownPath = createPathIfNonexist(appDir, "Markdown.txt");
+        writeFile(markdownPath, markdownContent.toString());
     }
 
     private String process(String content, String entityName, String tableName, List<String> colNames) {
@@ -173,7 +186,7 @@ public class LaravelGeneratorServiceImpl {
             String t = colJavaTypes.get(i);
             String l = colLengths.get(i);
 
-            if(t.endsWith("String") && Integer.parseInt(l) > 20) {
+            if(t.equals("String") && Integer.parseInt(l) > 20) {
                 buf.append("when(isset($data['" + c + "']), function ($query) use ($data) { return $query->where('" + c + "', 'like', '%'.$data['" + c + "'].'%');})->");
             } else {
                 buf.append("when(isset($data['" + c + "']), function ($query) use ($data) { return $query->where('" + c + "', '=', $data['" + c + "']);})->");
@@ -211,15 +224,15 @@ public class LaravelGeneratorServiceImpl {
             String t = colJavaTypes.get(i);
             String l = colLengths.get(i);
 
-            if(t.endsWith("String")) {
+            if(t.equals("String")) {
                 if(l.equals("16383")) {//text类型字段的长度为16383(实际是varchar类型字段的最大长度)
                     buf.append("'" + c + "' => 'nullable|string'");
                 } else {
                     buf.append("'" + c + "' => 'nullable|string|max:" + l + "'");
                 }
-            } else if(t.endsWith("Integer") || t.endsWith("Byte") || t.endsWith("Long")) {
+            } else if(t.equals("Integer") || t.equals("Byte") || t.equals("Long")) {
                 buf.append("'" + c + "' => 'nullable|integer'");
-            } else if(t.endsWith("Float") || t.endsWith("Double")){
+            } else if(t.equals("Float") || t.equals("Double")){
                 buf.append("'" + c + "' => 'nullable|numeric'");
             } else {
                 buf.append("'" + c + "' => 'nullable'");
