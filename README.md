@@ -7,7 +7,7 @@ laravel crud code generator(java spring boot version)
 
 2.在项目根目录执行mvn install打包成jar包
 
-3.执行java -Dserver.port=8080 -jar laravelgenerator.jar运行程序,端口号按需要修改
+3.执行java -Dfile.encoding=utf-8 -Dserver.port=8080 -jar laravelgenerator.jar运行程序,端口号按需要修改
 
 4.访问http://localhost:8080/swagger-ui.html, 可以看到有四个请求
 

@@ -273,7 +273,7 @@ public class LaravelGeneratorServiceImpl {
     }
 
     private void writeFile(String path, String content) {
-        try(BufferedWriter fw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(path),"UTF-8"))) {
+        try(FileWriter fw = new FileWriter(path)) {
             fw.write(content);
         } catch (IOException e) {
             logger.error("error", e);
