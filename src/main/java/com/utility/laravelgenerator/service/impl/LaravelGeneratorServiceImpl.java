@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import java.io.*;
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.regex.Matcher;
 
@@ -23,6 +24,8 @@ public class LaravelGeneratorServiceImpl {
 
     protected Logger logger = LoggerFactory.getLogger(getClass());
 
+    protected SimpleDateFormat yyyyMMddHHmmssFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+   
     @Autowired
     private JdbcTemplate template;
     
@@ -43,6 +46,8 @@ public class LaravelGeneratorServiceImpl {
             "VARCHARACTER,VARYING,WHEN,WHERE,WHILE,WITH,WRITE,X509,XOR,YEAR_MONTH,ZEROFILL";
 
     public void generate(String tableNames) {
+        String strDatetime = yyyyMMddHHmmssFormat.format(new Date());
+        
         String[] array = tableNames.trim().split(",");
         StringBuffer routesContent = new StringBuffer();
         StringBuffer restTestsContent = new StringBuffer();
@@ -70,7 +75,6 @@ public class LaravelGeneratorServiceImpl {
             boolean hasDeletedAt = false;
 
             List<String> colNames = new ArrayList<>();
-            List<String> colDbTypes = new ArrayList<>();
             List<String> colJavaTypes = new ArrayList<>();
             List<String> colLengths = new ArrayList<>();
             StringBuffer json = new StringBuffer("{\n");
@@ -106,14 +110,18 @@ public class LaravelGeneratorServiceImpl {
                 String colName = metaData.getColumnName(i);
                 if (!ignoreColNames.contains(colName)) {
                     colNames.add(colName);
-                    colDbTypes.add(metaData.getColumnTypeName(i));
                     colLengths.add(String.valueOf(metaData.getPrecision(i)));
 
                     String javaType = metaData.getColumnClassName(i);
-                    javaType = javaType.substring(javaType.lastIndexOf(".") + 1);
+                    javaType = javaType.substring(javaType.lastIndexOf(".") + 1).toLowerCase();
                     colJavaTypes.add(javaType);
-                    
-                    json.append("  \"" + colName + "\"" + ": " + "\"\",\n");
+
+                    String colType = metaData.getColumnTypeName(i).toLowerCase();
+                    if(colType.equals("timestamp") || colType.equals("date") || colType.equals("datetime")) {
+                        json.append("  \"" + colName + "\"" + ": " + "\"" + strDatetime + "\",\n");
+                    } else {
+                        json.append("  \"" + colName + "\"" + ": " + "\"\",\n");
+                    }
                     markdown.append("|" + colName + "|" + javaType + "|" + commentMap.get(colName) + "|\n");
                 } else if (colName.equals("created_at")) {
                     hasCreatedAt = true;
@@ -189,7 +197,7 @@ public class LaravelGeneratorServiceImpl {
             String t = colJavaTypes.get(i);
             String l = colLengths.get(i);
 
-            if(t.equals("String") && Integer.parseInt(l) > 20) {
+            if(t.equals("string") && Integer.parseInt(l) > 20) {
                 buf.append("when(isset($data['" + c + "']), function ($query) use ($data) { return $query->where('" + c + "', 'like', '%'.$data['" + c + "'].'%');})->");
             } else {
                 buf.append("when(isset($data['" + c + "']), function ($query) use ($data) { return $query->where('" + c + "', '=', $data['" + c + "']);})->");
@@ -227,15 +235,15 @@ public class LaravelGeneratorServiceImpl {
             String t = colJavaTypes.get(i);
             String l = colLengths.get(i);
 
-            if(t.equals("String")) {
+            if(t.equals("string")) {
                 if(l.equals("16383")) {//text类型字段的长度为16383(实际是varchar类型字段的最大长度)
                     buf.append("'" + c + "' => 'nullable|string'");
                 } else {
                     buf.append("'" + c + "' => 'nullable|string|max:" + l + "'");
                 }
-            } else if(t.equals("Integer") || t.equals("Byte") || t.equals("Long")) {
+            } else if(t.equals("integer") || t.equals("byte") || t.equals("long")) {
                 buf.append("'" + c + "' => 'nullable|integer'");
-            } else if(t.equals("Float") || t.equals("Double")){
+            } else if(t.equals("float") || t.equals("double")){
                 buf.append("'" + c + "' => 'nullable|numeric'");
             } else {
                 buf.append("'" + c + "' => 'nullable'");
