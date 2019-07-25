@@ -214,7 +214,7 @@ public class LaravelGeneratorServiceImpl {
 
     private String processModel(String content, String comments, boolean hasCreatedAt, boolean hasUpdatedAt, boolean hasDeletedAt) {
         if(!hasCreatedAt || !hasUpdatedAt) {
-            content = content.replaceAll(Matcher.quoteReplacement("public $timestamps"), Matcher.quoteReplacement("//public $timestamps"));
+            content = content.replaceAll(Matcher.quoteReplacement("$timestamps = true"), Matcher.quoteReplacement("$timestamps = false"));
         }
 
         if(!hasDeletedAt) {
